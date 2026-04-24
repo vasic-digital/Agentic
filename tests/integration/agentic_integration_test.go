@@ -11,7 +11,7 @@ import (
 
 func TestWorkflowLinearExecution_Integration(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip("skipping integration test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	wf := agentic.NewWorkflow("linear", "Linear workflow", nil, nil)
@@ -47,7 +47,7 @@ func TestWorkflowLinearExecution_Integration(t *testing.T) {
 
 func TestWorkflowConditionalBranching_Integration(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip("skipping integration test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	wf := agentic.NewWorkflow("cond", "Conditional workflow", nil, nil)
@@ -95,7 +95,7 @@ func TestWorkflowConditionalBranching_Integration(t *testing.T) {
 
 func TestWorkflowNoEntryPointError_Integration(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip("skipping integration test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	wf := agentic.NewWorkflow("empty", "No entry", nil, nil)
@@ -108,7 +108,7 @@ func TestWorkflowNoEntryPointError_Integration(t *testing.T) {
 
 func TestWorkflowEdgeValidation_Integration(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip("skipping integration test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	wf := agentic.NewWorkflow("edge-test", "Edge validation", nil, nil)
@@ -127,7 +127,7 @@ func TestWorkflowEdgeValidation_Integration(t *testing.T) {
 
 func TestWorkflowHistoryTracking_Integration(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip("skipping integration test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	wf := agentic.NewWorkflow("history", "History tracking", nil, nil)

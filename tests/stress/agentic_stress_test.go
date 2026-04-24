@@ -55,7 +55,7 @@ func buildLinearWorkflow(name string) *agentic.Workflow {
 
 func TestConcurrentWorkflowExecution_Stress(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping stress test in short mode")
+		t.Skip("skipping stress test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	const goroutines = 75
@@ -91,7 +91,7 @@ func TestConcurrentWorkflowExecution_Stress(t *testing.T) {
 
 func TestConcurrentStateMutations_Stress(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping stress test in short mode")
+		t.Skip("skipping stress test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	const goroutines = 100
@@ -148,7 +148,7 @@ func TestConcurrentStateMutations_Stress(t *testing.T) {
 
 func TestConcurrentNodeAdditions_Stress(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping stress test in short mode")
+		t.Skip("skipping stress test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	const goroutines = 80
@@ -188,7 +188,7 @@ func TestConcurrentNodeAdditions_Stress(t *testing.T) {
 
 func TestConcurrentWorkflowCreationAndExecution_Stress(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping stress test in short mode")
+		t.Skip("skipping stress test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	const goroutines = 50
@@ -242,7 +242,7 @@ func TestConcurrentWorkflowCreationAndExecution_Stress(t *testing.T) {
 
 func TestConcurrentEdgeOperations_Stress(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping stress test in short mode")
+		t.Skip("skipping stress test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	const goroutines = 60

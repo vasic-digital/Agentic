@@ -12,7 +12,7 @@ import (
 
 func TestFullAgentWorkflowPipeline_E2E(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping e2e test in short mode")
+		t.Skip("skipping e2e test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	cfg := agentic.DefaultWorkflowConfig()
@@ -59,7 +59,7 @@ func TestFullAgentWorkflowPipeline_E2E(t *testing.T) {
 
 func TestWorkflowWithShouldEnd_E2E(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping e2e test in short mode")
+		t.Skip("skipping e2e test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	wf := agentic.NewWorkflow("early-exit", "Early exit workflow", nil, nil)
@@ -83,7 +83,7 @@ func TestWorkflowWithShouldEnd_E2E(t *testing.T) {
 
 func TestWorkflowDefaultConfig_E2E(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping e2e test in short mode")
+		t.Skip("skipping e2e test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	cfg := agentic.DefaultWorkflowConfig()
@@ -98,7 +98,7 @@ func TestWorkflowDefaultConfig_E2E(t *testing.T) {
 
 func TestWorkflowCheckpointCreation_E2E(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping e2e test in short mode")
+		t.Skip("skipping e2e test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	cfg := agentic.DefaultWorkflowConfig()
@@ -130,7 +130,7 @@ func TestWorkflowCheckpointCreation_E2E(t *testing.T) {
 
 func TestWorkflowNodeTypeVariety_E2E(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping e2e test in short mode")
+		t.Skip("skipping e2e test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	nodeTypes := []agentic.NodeType{
