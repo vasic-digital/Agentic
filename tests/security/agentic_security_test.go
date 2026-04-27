@@ -13,7 +13,7 @@ import (
 
 func TestNilHandlerNodeExecution_Security(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping security test in short mode")
+		t.Skip("skipping security test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	wf := agentic.NewWorkflow("nil-handler", "Nil handler test", nil, nil)
@@ -28,7 +28,7 @@ func TestNilHandlerNodeExecution_Security(t *testing.T) {
 
 func TestSetEntryPointNonexistentNode_Security(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping security test in short mode")
+		t.Skip("skipping security test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	wf := agentic.NewWorkflow("bad-entry", "Bad entry point", nil, nil)
@@ -39,7 +39,7 @@ func TestSetEntryPointNonexistentNode_Security(t *testing.T) {
 
 func TestAddEndNodeNonexistent_Security(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping security test in short mode")
+		t.Skip("skipping security test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	wf := agentic.NewWorkflow("bad-end", "Bad end node", nil, nil)
@@ -50,7 +50,7 @@ func TestAddEndNodeNonexistent_Security(t *testing.T) {
 
 func TestWorkflowContextCancellation_Security(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping security test in short mode")
+		t.Skip("skipping security test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	cfg := agentic.DefaultWorkflowConfig()
@@ -77,7 +77,7 @@ func TestWorkflowContextCancellation_Security(t *testing.T) {
 
 func TestWorkflowNodeHandlerError_Security(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping security test in short mode")
+		t.Skip("skipping security test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	cfg := agentic.DefaultWorkflowConfig()
@@ -101,7 +101,7 @@ func TestWorkflowNodeHandlerError_Security(t *testing.T) {
 
 func TestRestoreFromCheckpointInvalid_Security(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping security test in short mode")
+		t.Skip("skipping security test in short mode")  // SKIP-OK: #short-mode
 	}
 
 	wf := agentic.NewWorkflow("restore", "Restore test", nil, nil)

@@ -1837,7 +1837,7 @@ func TestWorkflow_Execute_OutputErrorField(t *testing.T) {
 
 func TestWorkflow_Execute_LargeLinearChain(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping large chain test in short mode")
+		t.Skip("skipping large chain test in short mode")  // SKIP-OK: #short-mode
 	}
 	var counter atomic.Int64
 	wf := buildLinearWorkflow(t, 50, countingHandler(&counter))
