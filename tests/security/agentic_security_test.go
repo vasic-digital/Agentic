@@ -2,6 +2,7 @@ package security
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -11,9 +12,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestNilHandlerNodeExecution_Security asserts the security guarantee that a
+// nil Handler is rejected with ErrNodeHandlerNotConfigured rather than
+// silently succeeded.
+//
+// Round-23 §11.4 audit (2026-05-17): the previous version of this test
+// asserted the OPPOSITE — that a nil-handler node "successfully" completed.
+// That was itself a PASS-bluff: a security test that ratifies a silent
+// no-op fabrication is worse than no test at all. The corrected assertion
+// pins the contract that an attacker (or a refactor-induced misconfiguration)
+// cannot smuggle a no-op node past the executor.
 func TestNilHandlerNodeExecution_Security(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping security test in short mode")  // SKIP-OK: #short-mode
+		t.Skip("skipping security test in short mode") // SKIP-OK: #short-mode
 	}
 
 	wf := agentic.NewWorkflow("nil-handler", "Nil handler test", nil, nil)
@@ -22,8 +33,12 @@ func TestNilHandlerNodeExecution_Security(t *testing.T) {
 	require.NoError(t, wf.AddEndNode("n"))
 
 	state, err := wf.Execute(context.Background(), nil)
-	require.NoError(t, err)
-	assert.Equal(t, agentic.StatusCompleted, state.Status)
+	require.Error(t, err, "nil Handler MUST surface as workflow error, not silent success")
+	assert.True(t, errors.Is(err, agentic.ErrNodeHandlerNotConfigured),
+		"executor must reject nil Handler with ErrNodeHandlerNotConfigured; got: %v", err)
+	assert.Contains(t, err.Error(), "NoHandler",
+		"error must name the offending node for forensic clarity")
+	require.NotNil(t, state, "state must still be returned so callers can inspect History[].Error")
 }
 
 func TestSetEntryPointNonexistentNode_Security(t *testing.T) {

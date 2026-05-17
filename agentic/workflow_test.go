@@ -854,16 +854,22 @@ func TestWorkflow_Execute_SubgraphNode(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestWorkflow_Execute_NilHandler(t *testing.T) {
+	// Round-23 §11.4 audit (2026-05-17): a nil Handler is a configuration
+	// defect that MUST surface as an error, not a silent no-op success.
+	// The previous behaviour ("nil handler returns empty NodeOutput") was
+	// a PASS-bluff that hid forgotten / refactor-cleared handlers.
 	wf := NewWorkflow("test", "", nil, nil)
 	require.NoError(t, wf.AddNode(&Node{ID: "nil-h", Name: "NilHandler"}))
 	require.NoError(t, wf.SetEntryPoint("nil-h"))
 	require.NoError(t, wf.AddEndNode("nil-h"))
 
 	state, err := wf.Execute(context.Background(), nil)
-	require.NoError(t, err)
-	assert.Equal(t, StatusCompleted, state.Status)
-	// nil handler returns empty NodeOutput.
-	assert.NotNil(t, state.History[0].Output)
+	require.Error(t, err, "nil Handler MUST surface as workflow error, not silent success")
+	assert.True(t, errors.Is(err, ErrNodeHandlerNotConfigured),
+		"workflow Execute error must wrap ErrNodeHandlerNotConfigured so callers can errors.Is-discriminate it; got: %v", err)
+	assert.Contains(t, err.Error(), "NilHandler",
+		"error must name the node whose Handler was nil so operators can locate the defect")
+	require.NotNil(t, state, "state must still be returned so callers can inspect History[].Error")
 }
 
 // ---------------------------------------------------------------------------
@@ -2072,12 +2078,23 @@ func TestWorkflow_Execute_ToolsInInput(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// Execute — workflow with no edges, only entry + end on same node (no handler)
+// Execute — workflow with no edges, only entry + end on same node
 // ---------------------------------------------------------------------------
 
-func TestWorkflow_Execute_NoEdgesNilHandlerEndNode(t *testing.T) {
+func TestWorkflow_Execute_NoEdgesEndNode(t *testing.T) {
+	// Round-23 §11.4 audit (2026-05-17): the previous version of this test
+	// relied on the silent nil-handler no-op fallback (now removed as a
+	// PASS-bluff per ErrNodeHandlerNotConfigured). A single-node workflow
+	// MUST still complete successfully when its sole node has a real
+	// pass-through handler, so the original intent of the test (no edges,
+	// entry + end on same node) is preserved with an explicit no-op
+	// handler that returns &NodeOutput{} — the documented pattern for
+	// legitimate pass-through nodes.
 	wf := NewWorkflow("test", "", nil, nil)
-	require.NoError(t, wf.AddNode(&Node{ID: "only"}))
+	passThrough := func(_ context.Context, _ *WorkflowState, _ *NodeInput) (*NodeOutput, error) {
+		return &NodeOutput{}, nil
+	}
+	require.NoError(t, wf.AddNode(&Node{ID: "only", Handler: passThrough}))
 	require.NoError(t, wf.SetEntryPoint("only"))
 	require.NoError(t, wf.AddEndNode("only"))
 
@@ -2464,16 +2481,35 @@ func TestWorkflow_CreateCheckpoint_MultipleCheckpoints(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestWorkflow_ExecuteNode_NilHandler(t *testing.T) {
+	// Round-23 §11.4 audit (2026-05-17): nil Handler MUST surface as
+	// ErrNodeHandlerNotConfigured with the node id+name wrapped, not as
+	// a silent empty success.
 	wf := NewWorkflow("test", "", nil, nil)
 
 	node := &Node{ID: "n", Name: "N"}
 	state := &WorkflowState{}
 	output, err := wf.executeNode(context.Background(), node, state, nil)
-	require.NoError(t, err)
-	require.NotNil(t, output)
-	// Empty output when handler is nil.
-	assert.Nil(t, output.Result)
-	assert.False(t, output.ShouldEnd)
+	require.Error(t, err)
+	assert.True(t, errors.Is(err, ErrNodeHandlerNotConfigured),
+		"executeNode must return an error wrapping ErrNodeHandlerNotConfigured; got: %v", err)
+	assert.Contains(t, err.Error(), "id=\"n\"",
+		"error must include node ID so operators can locate the misconfigured node")
+	assert.Contains(t, err.Error(), "name=\"N\"",
+		"error must include node Name so operators can locate the misconfigured node")
+	assert.Nil(t, output, "no NodeOutput when Handler is nil — output MUST NOT be fabricated")
+}
+
+// TestWorkflow_ExecuteNode_NilHandler_SentinelIsErrorsIs is the regression
+// test mandated by round-23 §11.4 audit: callers MUST be able to identify
+// the "nil handler" configuration defect via errors.Is on the exported
+// sentinel, distinct from handler-returned execution errors.
+func TestWorkflow_ExecuteNode_NilHandler_SentinelIsErrorsIs(t *testing.T) {
+	require.True(t, errors.Is(ErrNodeHandlerNotConfigured, ErrNodeHandlerNotConfigured),
+		"sentinel must satisfy errors.Is reflexively")
+	require.NotEmpty(t, ErrNodeHandlerNotConfigured.Error(),
+		"sentinel must carry a non-empty operator-facing message")
+	assert.Contains(t, ErrNodeHandlerNotConfigured.Error(), "PASS-bluff",
+		"sentinel message must reference the §11.4 PASS-bluff context for forensic clarity")
 }
 
 func TestWorkflow_ExecuteNode_HandlerSuccess(t *testing.T) {

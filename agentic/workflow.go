@@ -4,6 +4,7 @@ package agentic
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -11,6 +12,25 @@ import (
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
+
+// ErrNodeHandlerNotConfigured is returned by executeNode when the workflow
+// reaches a node whose Handler field is nil. The previous implementation
+// silently returned &NodeOutput{} with no error, treating handler-less
+// nodes as no-op successes — CRITICAL PASS-bluff at the workflow-executor
+// layer (round-23 §11.4 audit, 2026-05-17): a graph containing a node
+// whose handler was forgotten / lost during refactor would execute
+// "successfully" and even checkpoint through it, with downstream nodes
+// receiving an empty NodeOutput.Previous that they likely treat as a
+// legitimate empty result from upstream.
+//
+// Per CONST-035 / Article XI §11.9 / CONST-050(A), production code MUST
+// surface the misconfiguration as an explicit error wrapping the node
+// name. Callers (Workflow.executeStep) propagate the error via
+// fmt.Errorf("node %s failed: %w", ...) so the failure is visible in
+// state.History[].Error and in the Execute(...) return value. Unit
+// tests that need a no-op node MUST register an explicit pass-through
+// handler instead of relying on the silent nil-handler fallback.
+var ErrNodeHandlerNotConfigured = errors.New("agentic: node Handler is nil — every Node in a Workflow.Graph MUST have a non-nil Handler before execution (the previous silent no-op fallback produced fabricated success records and is removed; §11.4 PASS-bluff). Use a NodeHandler that returns &NodeOutput{} explicitly if a pass-through node is required")
 
 // Workflow represents a graph-based agentic workflow
 type Workflow struct {
@@ -417,8 +437,14 @@ func (w *Workflow) executeLoop(ctx context.Context, state *WorkflowState, input 
 }
 
 func (w *Workflow) executeNode(ctx context.Context, node *Node, state *WorkflowState, input *NodeInput) (*NodeOutput, error) {
+	// Round-23 §11.4 audit (2026-05-17): a nil Handler is a configuration
+	// defect — the previous silent-empty-success path was a PASS-bluff
+	// that hid forgotten / accidentally-cleared handlers and let downstream
+	// nodes consume a fabricated empty result. Surface the misconfiguration
+	// as an explicit error wrapping the node name so it bubbles up through
+	// state.History[].Error and Execute(...)'s return value.
 	if node.Handler == nil {
-		return &NodeOutput{}, nil
+		return nil, fmt.Errorf("%w: node id=%q name=%q", ErrNodeHandlerNotConfigured, node.ID, node.Name)
 	}
 
 	var output *NodeOutput
