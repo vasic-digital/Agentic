@@ -1,0 +1,58 @@
+{
+  "_comment": "Round-260 multi-locale fixtures for digital.vasic.agentic. Used by challenges/scripts/agentic_describe_challenge.sh and challenges/runner/main.go to verify the workflow engine round-trips non-ASCII content through every public surface: Workflow.AddNode/AddEdge/SetEntryPoint/AddEndNode/Execute/RestoreFromCheckpoint, NodeHandler/ConditionFunc/NodeInput/NodeOutput/WorkflowState/Checkpoint, ErrNodeHandlerNotConfigured. CONST-046 alignment: no hardcoded English-only assumption — every node name, prompt, and result string in the runner is sourced from these fixtures.",
+  "inputs": [
+    {
+      "locale": "en",
+      "plan_label": "Plan: Code Review",
+      "execute_label": "Execute: Run Static Analysis",
+      "review_label": "Review: Summarize Findings",
+      "prompt": "Analyze the diff for style violations.",
+      "expected_result": "Plan complete: analyze, execute, review (en)",
+      "expected_min_runes": 38
+    },
+    {
+      "locale": "sr",
+      "plan_label": "План: Преглед кода",
+      "execute_label": "Извршење: Покрени статичку анализу",
+      "review_label": "Преглед: Сумирај налазе",
+      "prompt": "Анализирај разлику за кршења стила.",
+      "expected_result": "План завршен: анализа, извршење, преглед (sr)",
+      "expected_min_runes": 42
+    },
+    {
+      "locale": "ja",
+      "plan_label": "計画: コードレビュー",
+      "execute_label": "実行: 静的解析を行う",
+      "review_label": "レビュー: 結果を要約する",
+      "prompt": "スタイル違反について差分を分析してください。",
+      "expected_result": "計画完了: 分析、実行、レビュー (ja)",
+      "expected_min_runes": 18
+    },
+    {
+      "locale": "ar",
+      "plan_label": "الخطة: مراجعة الكود",
+      "execute_label": "التنفيذ: تشغيل التحليل الثابت",
+      "review_label": "المراجعة: تلخيص النتائج",
+      "prompt": "حلل الفرق لانتهاكات الأسلوب.",
+      "expected_result": "اكتملت الخطة: تحليل، تنفيذ، مراجعة (ar)",
+      "expected_min_runes": 32
+    },
+    {
+      "locale": "zh-CN",
+      "plan_label": "计划: 代码审查",
+      "execute_label": "执行: 运行静态分析",
+      "review_label": "审查: 总结发现",
+      "prompt": "分析差异以查找样式违规。",
+      "expected_result": "计划完成: 分析、执行、审查 (zh-CN)",
+      "expected_min_runes": 16
+    }
+  ],
+  "expected_invariants": {
+    "node_handler_nil_returns_err_sentinel": true,
+    "checkpoint_captures_variables": true,
+    "should_end_short_circuits_graph": true,
+    "conditional_branching_selects_first_truthy_edge": true,
+    "retry_policy_exponential_backoff": true,
+    "history_records_every_node_execution": true
+  }
+}

@@ -231,11 +231,73 @@ type RetryPolicy struct {
 - **Retry with backoff**: Per-node retry policies with configurable exponential backoff
 - **Graceful termination**: Nodes can signal completion via `NodeOutput.ShouldEnd` or by reaching an end node
 
+## Anti-bluff guarantees (round-260)
+
+The round-260 Challenge runner (`challenges/runner/main.go`) and its
+paired-mutation gate (`challenges/scripts/agentic_describe_challenge.sh`)
+together enforce seven invariants drawn from Article XI §11.9, CONST-035,
+and CONST-050(B):
+
+1. **Real linear DAG round-trip per locale.** Section 1 of the runner
+   builds a real `Workflow`, registers three nodes per locale (5
+   locales: en, sr, ja, ar, zh-CN), executes the graph, and asserts
+   `state.History` length is exactly 3, every `NodeName` is byte-exact
+   to the fixture label, and the final result string survives non-ASCII
+   bytes verbatim. `utf8.RuneCountInString` is captured in every PASS
+   line. No node label or prompt is hardcoded in the runner; everything
+   is loaded from `tests/fixtures/agentic/payloads.json`.
+2. **Real conditional branching.** Section 2 constructs a Classify ->
+   {CodeGen | QA} fan-out with `ConditionFunc`-gated edges and asserts
+   only the truthy branch executes — the rejected branch's `NodeID`
+   MUST NOT appear in `state.History`.
+3. **Real ShouldEnd short-circuit.** Section 3 builds a 4-node chain
+   where node 2 sets `NodeOutput.ShouldEnd = true` and asserts
+   `state.History` length is exactly 2 AND nodes 3+4's poison flags
+   never appear in `state.Variables`.
+4. **Real exponential-backoff timing.** Section 4 registers a node
+   whose handler errors on attempts 1-3 and succeeds on attempt 4,
+   with `RetryPolicy{Delay: 20ms, Backoff: 2.0, MaxRetries: 3}`, and
+   asserts the wall-clock elapsed is >= sum(20 + 40 + 80) = 140ms —
+   proves backoff fires for real, not as a no-op.
+5. **Real checkpoint + restore round-trip.** Section 5 runs a 10-node
+   workflow with `CheckpointInterval = 2`, captures the produced
+   `state.Checkpoints`, poisons `state.CurrentNode` and a variable,
+   restores from a middle checkpoint, and asserts `CurrentNode` is
+   reset to `cp.NodeID`, the variables byte-exact equal the snapshot,
+   the status is reset to `Running`, AND an unknown checkpoint ID
+   returns a real error.
+6. **Real nil-handler sentinel.** Section 6 registers a node with a
+   nil `Handler`, executes the workflow, and asserts the returned
+   error wraps `ErrNodeHandlerNotConfigured` via `errors.Is(...)`.
+   This is the round-23 §11.4 audit fix: the previous silent-empty-
+   success path was a PASS-bluff at the workflow-executor layer and
+   is closed for good.
+7. **Paired mutation.** Running the gate with `--anti-bluff-mutate`
+   plants a deliberate symbol-rename in a tmp copy of
+   `docs/test-coverage.md` (`ErrNodeHandlerNotConfigured ->
+   ErrBogus_MUTATED`), reruns the cross-reference check, and asserts
+   the gate exits 99. Proves the symbol-to-test ledger actually catches
+   drift instead of rubber-stamping it.
+
+A Section that returns success without producing the corresponding PASS
+line is a §11.9 violation regardless of how green the summary line looks.
+
 ## Testing
 
 ```bash
+# Unit + race tests (mocks allowed, per CONST-050(A))
 go build ./...
 go test ./... -count=1 -race
+
+# Round-260 Challenge: deep-doc + runner gate (clean mode)
+bash challenges/scripts/agentic_describe_challenge.sh
+
+# Paired-mutation gate (must exit 99 on PASS)
+bash challenges/scripts/agentic_describe_challenge.sh --anti-bluff-mutate
+
+# Inherited governance challenges
+bash challenges/scripts/no_suspend_calls_challenge.sh
+bash challenges/scripts/host_no_auto_suspend_challenge.sh
 ```
 
 ## Integration with HelixAgent

@@ -1,34 +1,70 @@
-# Binaries
+# CONST-053: .gitignore + No-Versioned-Build-Artifacts Mandate
+# This file MUST cover every forbidden-from-version-control class.
+
+# 1. Build artifacts
+/bin/
+/build/
+/dist/
+/out/
+target/
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
-
-# Test binary
+*.a
+*.o
+*.class
+*.pyc
 *.test
 
-# Output
-*.out
+# 2. Cache files
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+node_modules/
+.next/
+.cache/
+.gradle/
+.terraform/
 
-# Coverage
-coverage.html
-coverage.out
-
-# IDE
-.idea/
-.vscode/
+# 3. Temp / OS files
+*.tmp
 *.swp
 *.swo
 *~
-
-# OS
 .DS_Store
 Thumbs.db
+*.orig
+*.rej
 
-# Vendor (if not checked in)
-# vendor/
+# 4. Sensitive-data files (CONST-042 intersection)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+id_rsa*
+id_ed25519*
+.netrc
+secrets/
+api_keys.sh
 
-# Build
-/bin/
-/dist/
+# 5. Generated reports / logs
+*.log
+*.out
+coverage.out
+coverage.html
+htmlcov/
+
+# 6. IDE / personal state
+.idea/
+.history/
+.vscode/
+
+# Round-260 transient runner artefacts (always rebuildable from sources)
+/tmp/agentic_round260_runner
+/tmp/agentic_build.log
+/tmp/agentic_run.log
